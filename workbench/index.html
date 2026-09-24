@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>证照识别工作台</title><style>/* WORKBENCH_CSS */</style></head>
+<body>
+
+<div class="layout">
+<aside class="sidebar">
+<div class="brand"><span class="monogram">OCR</span><div><h1>证照识别工作台</h1><span class="brand-caption">DOCUMENT RECOGNITION</span></div></div>
+<div class="start-area"><button id="start" class="primary full" disabled><span id="start-label">开始识别</span><span id="start-icon" aria-hidden="true">→</span></button><p id="start-note">选择文件后即可开始</p><p id="error" role="alert"></p></div>
+<div class="sidebar-scroll"><section class="upload-section"><div class="section-title"><h2>导入文件</h2><span class="small-label">本地处理</span></div>
+<label id="dropzone" class="dropzone" tabindex="0"><input id="file" type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.bmp,.tif,.tiff,.webp,.gif"><span class="upload-glyph">↑</span><strong>拖入文件，或点击选择</strong><span>PDF · JPG · PNG · TIFF · 更多</span><small>每份不超过 50 MB</small></label>
+<div class="selected-row"><div id="selected-files" aria-live="polite"></div><button id="clear-files" class="subtle" hidden>清空已选</button></div></section>
+<section class="parameter-section"><div class="section-title"><h2>识别参数 <small>新任务</small></h2><button id="settings-toggle" class="subtle">高级设置</button></div>
+<label class="control">证照类型<select id="document-type"><option value="auto">自动判断证照类型</option><option value="general">通用文字识别</option></select></label>
+<div class="control"><span>识别质量</span><div class="presets" role="group" aria-label="运行模式"><button data-preset="fast">快速</button><button class="active" data-preset="balanced">均衡</button><button data-preset="precise">精细</button></div><small id="preset-hint">保留局部复核，兼顾清晰度与用时</small></div>
+<div class="cpu-control"><label class="control" for="cpu-threads">CPU 并行度<select id="cpu-threads"><option value="" disabled selected>正在读取本机配置</option></select></label><p id="cpu-hint" class="parameter-note">正在读取本机配置</p><div class="resource-line"><span>CPU 占用</span><strong id="cpu-usage">—</strong><span id="memory-usage">—</span></div><div class="cpu-meter" aria-hidden="true"><i id="cpu-fill"></i></div></div>
+<details id="advanced"><summary>高级参数 <span>调整清晰度与识别范围</span></summary>
+<label class="control">检测清晰度<select id="det-limit"><option value="960">960 · 更快</option><option value="1536" selected>1536 · 均衡</option><option value="2048">2048 · 精细</option><option value="2560">2560 · 高精细</option></select></label>
+<label class="control">PDF 渲染分辨率<select id="pdf-dpi"><option value="120">120 DPI · 更快</option><option value="180" selected>180 DPI · 均衡</option><option value="240">240 DPI · 精细</option><option value="300">300 DPI · 高精细</option></select></label>
+<label class="control">页码范围<input id="page-range" placeholder="留空识别全部，或输入 1,3-5"><small>支持 PDF 与多页 TIFF，每次最多 50 页</small></label>
+<label class="control">PDF 打开密码<input id="pdf-password" type="password" autocomplete="off" placeholder="仅加密文件需要"></label>
+<label class="toggle"><input id="recovery" type="checkbox" checked>局部漏字补读</label><label class="toggle"><input id="local-review" type="checkbox" checked>字段局部复核</label><label class="toggle"><input id="seal-enhance" type="checkbox" checked>红章覆盖正文增强</label><label class="toggle"><input id="seal-text" type="checkbox">印章文字专项识别</label>
+<p class="parameter-note">提高分辨率、开启补读或印章识别会增加用时。参数用于新任务；当前记录的设置见“运行详情”。</p>
+</details>
+</section>
+<section class="history"><div class="section-title"><h2>识别记录</h2><button id="refresh" class="subtle">刷新</button></div><div id="jobs"><p class="muted">暂无识别记录</p></div></section>
+</div><footer class="sidebar-footer"><span>本地处理</span><button id="shutdown" class="subtle">关闭服务</button></footer>
+</aside>
+<main>
+<div class="workspace-heading"><div class="heading-text"><h2 id="document-title">新建识别</h2><p id="job-message">导入证照文件，开始识别与核对</p></div><div class="workspace-actions"><span id="health" class="health">正在连接</span><button id="new-task" class="new-task">＋ 新建识别</button><button id="cancel" hidden>停止任务</button><button id="export-json" disabled>导出 JSON</button><button id="export-text" disabled>导出全文</button></div></div>
+<section id="progress" hidden aria-label="任务进度"><div class="progress-heading"><span class="activity-spinner" aria-hidden="true"></span><div class="progress-copy" role="status"><strong id="progress-title">正在识别</strong><span id="progress-text"></span></div><span id="progress-elapsed" aria-live="off"></span></div><div class="progress-track" role="progressbar" aria-label="任务处理中"><i id="progress-fill"></i></div></section>
+<div class="workspace">
+<section class="viewer"><div class="panel-toolbar"><h3>证照预览</h3><div class="page-tools"><button id="prev" aria-label="上一页" disabled>‹</button><select id="page-select" aria-label="页码"><option value="">—</option></select><button id="next" aria-label="下一页" disabled>›</button></div><select id="zoom" aria-label="缩放"><option value="fit">适应页面</option><option value="100">100%</option><option value="150">150%</option><option value="200">200%</option></select><a id="open-image" target="_blank" hidden>原图 ↗</a></div>
+<div id="image-stage" class="image-stage"><div class="viewer-empty"><span class="page-outline"><i></i><i></i><i></i></span><strong>等待导入文档</strong><p>扫描 PDF、证照照片和多页资料均可识别</p></div></div><div id="image-foot" class="panel-foot">原文件保留，识别结果单独保存</div></section>
+<section class="result-panel"><div class="result-tabs" role="tablist"><button data-tab="fields" role="tab" aria-selected="true" class="active">证照字段</button><button data-tab="text" role="tab">识别全文</button><button data-tab="seals" role="tab">印章文字</button><button data-tab="metrics" role="tab">运行详情</button></div>
+<div id="result-content" class="result-content"><div class="result-empty"><strong>识别结果将在此显示</strong><p>有内容的候选全部保留，可对照原图修改。</p></div></div>
+<div class="result-footer"><span id="review-status">等待识别</span><div class="review-actions"><button id="discard-review" disabled>撤销修改</button><button id="save-review" class="primary" disabled>保存修订</button></div></div></section>
+</div>
+</main></div><div id="toast" role="status" hidden></div><script>/* WORKBENCH_JS */</script></body></html>
