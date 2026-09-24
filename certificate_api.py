@@ -15,7 +15,27 @@ BUSY = threading.Lock()
 from app_configuration import CONFIG
 
 
+class WorkbenchBoundary:
+    """Expose only the workbench API and Gradio's startup handshake."""
+    def __init__(self, app):
+        self.app = app
+
+    async def __call__(self, scope, receive, send):
+        if scope['type'] == 'websocket':
+            await send({'type': 'websocket.close', 'code': 1008})
+            return
+        if scope['type'] == 'http':
+            path = scope.get('path', '')
+            if path not in ('/', '/api', '/gradio_api/startup-events') and not path.startswith('/api/'):
+                await JSONResponse({'detail': 'Not Found'}, status_code=404)(scope, receive, send)
+                return
+        await self.app(scope, receive, send)
+
+
 def attach_api(app,shutdown=None):
+    # The standalone workbench does not use Gradio file, proxy or prediction routes.
+    # Remove them after the local startup handshake has completed.
+    app.router.routes.clear()
     api = FastAPI(docs_url=None, redoc_url=None)
     # Local files, loopback pages and explicitly configured business origins only.
     @api.middleware('http')

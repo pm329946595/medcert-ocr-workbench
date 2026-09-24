@@ -265,7 +265,7 @@ def recognize(path, recovery=True, document_type=None, options=None):
         rows = []
         annotated = original.copy()
         draw = ImageDraw.Draw(annotated)
-        font = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 18)
+        font = ImageFont.truetype('msyh.ttc', 18)
         for entry in layout['ordered_entries']:
             number = len(rows) + 1
             origin = '原始' if entry['source'] == 'primary' else '局部补识别'

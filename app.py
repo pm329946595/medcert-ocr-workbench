@@ -219,10 +219,12 @@ def main():
     if port is None:
         raise RuntimeError('本地端口 7860–7879 均被占用。')
     url = f'http://127.0.0.1:{port}'
+    from starlette.middleware import Middleware
+    from certificate_api import WorkbenchBoundary, attach_api
     ui.queue(max_size=8).launch(server_name='127.0.0.1', server_port=port, share=False,
                               inbrowser=False, prevent_thread_lock=True,
-                              allowed_paths=[str(ROOT / 'images')], max_file_size='30mb')
-    from certificate_api import attach_api
+                              app_kwargs={'middleware': [Middleware(WorkbenchBoundary)]},
+                              ssr_mode=False, max_file_size='30mb')
     attach_api(ui.app,shutdown=shutdown)
     STATE.write_text(json.dumps({'pid': os.getpid(), 'create_time': psutil.Process().create_time(), 'url': url}), encoding='utf-8')
     atexit.register(lambda: STATE.unlink(missing_ok=True))

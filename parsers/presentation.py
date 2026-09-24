@@ -18,7 +18,7 @@ def _box(item):
 def save_evidence(original, entries, structured, out):
     picture = original.copy()
     draw = ImageDraw.Draw(picture)
-    font = ImageFont.truetype('C:/Windows/Fonts/msyh.ttc', 24)
+    font = ImageFont.truetype('msyh.ttc', 24)
     index = {e['id']: e for e in entries}
     folder = out / 'fields'
     folder.mkdir(exist_ok=True)
